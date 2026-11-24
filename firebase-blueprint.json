@@ -1,0 +1,287 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Lighting fixture or home decor product in the Yasmin Lights & Home Decor catalog.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sku": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "name": {
+          "type": "object",
+          "description": "Bilingual product title { en, hi }"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "fancy-lights",
+            "chandeliers",
+            "wall-lights",
+            "home-decor",
+            "wall-clocks",
+            "gifts-more"
+          ]
+        },
+        "price": {
+          "type": "number"
+        },
+        "originalPrice": {
+          "type": "number"
+        },
+        "description": {
+          "type": "object",
+          "description": "Bilingual product description { en, hi }"
+        },
+        "images": {
+          "type": "array",
+          "description": "Bounded list of up to 6 image paths"
+        },
+        "sizes": {
+          "type": "array",
+          "description": "Bounded list of up to 10 size options"
+        },
+        "colors": {
+          "type": "array",
+          "description": "Bounded list of up to 10 colour/finish options"
+        },
+        "stock": {
+          "type": "integer"
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "latest": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "category",
+        "price",
+        "description",
+        "images",
+        "sizes",
+        "colors",
+        "stock",
+        "featured",
+        "latest"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer Cash on Delivery order with delivery PII isolated to owner and admin.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 20
+        },
+        "address": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "pincode": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 10,
+          "pattern": "^[0-9]{6}$"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["COD"]
+        },
+        "items": {
+          "type": "array",
+          "description": "Bounded list of up to 30 ordered items"
+        },
+        "subtotal": {
+          "type": "number"
+        },
+        "deliveryFee": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "Confirmed",
+            "Packed",
+            "Out for Delivery",
+            "Delivered",
+            "Cancelled"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "customerName",
+        "phone",
+        "address",
+        "city",
+        "pincode",
+        "paymentMethod",
+        "items",
+        "subtotal",
+        "deliveryFee",
+        "total",
+        "status",
+        "createdAt"
+      ]
+    },
+    "ShopSettings": {
+      "title": "ShopSettings",
+      "description": "Editable storefront branding, showroom contact details, and delivery fee configuration.",
+      "type": "object",
+      "properties": {
+        "shopName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "tagline": {
+          "type": "object"
+        },
+        "promoBanner": {
+          "type": "object"
+        },
+        "address": {
+          "type": "object"
+        },
+        "openingHours": {
+          "type": "object"
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 30
+        },
+        "whatsapp": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 30
+        },
+        "mapUrl": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 500
+        },
+        "deliveryCharge": {
+          "type": "number"
+        },
+        "freeDeliveryThreshold": {
+          "type": "number"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "shopName",
+        "tagline",
+        "promoBanner",
+        "address",
+        "openingHours",
+        "phone",
+        "whatsapp",
+        "mapUrl",
+        "deliveryCharge",
+        "freeDeliveryThreshold"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Explicit Firestore admin allowlist entry keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Publicly readable catalog products; managed by Admin and stock-decrementable on checkout."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer COD orders with PII restricted strictly to order owner and store admin."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/ShopSettings" },
+      "description": "Publicly readable shop configuration document (settings/shop); editable only by Admin."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Admin role documents used by isAdmin() rules check."
+    }
+  }
+}

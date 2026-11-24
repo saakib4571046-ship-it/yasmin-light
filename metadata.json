@@ -1,0 +1,6 @@
+{
+  "name": "Yasmin Lights & Home Decor",
+  "description": "Light Your Home, Beautify Your Life. Premium lighting, chandeliers, wall lights, clocks, and home decor boutique in English and Hindi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

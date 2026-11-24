@@ -1,0 +1,198 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: default-deny all unspecified paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'saakib4571046@gmail.com';
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isBilingualMap(val, minLen, maxLen) {
+      return val is map &&
+        val.keys().hasAll(['en', 'hi']) &&
+        val.keys().hasOnly(['en', 'hi']) &&
+        val.en is string && val.en.size() >= minLen && val.en.size() <= maxLen &&
+        val.hi is string && val.hi.size() >= minLen && val.hi.size() <= maxLen;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'id', 'sku', 'name', 'category', 'price', 'description',
+          'images', 'sizes', 'colors', 'stock', 'featured', 'latest'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'sku', 'name', 'category', 'price', 'originalPrice',
+          'description', 'images', 'sizes', 'colors', 'stock',
+          'featured', 'latest', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 40 &&
+        isBilingualMap(data.name, 1, 160) &&
+        data.category in [
+          'fancy-lights', 'chandeliers', 'wall-lights',
+          'home-decor', 'wall-clocks', 'gifts-more'
+        ] &&
+        data.price is number && data.price > 0 && data.price <= 10000000 &&
+        (!('originalPrice' in data) || (data.originalPrice is number && data.originalPrice >= data.price && data.originalPrice <= 10000000)) &&
+        isBilingualMap(data.description, 1, 2000) &&
+        data.images is list && data.images.size() >= 1 && data.images.size() <= 6 && data.images[0] is string && data.images[0].size() <= 500 &&
+        data.sizes is list && data.sizes.size() >= 1 && data.sizes.size() <= 10 && data.sizes[0] is string && data.sizes[0].size() <= 80 &&
+        data.colors is list && data.colors.size() >= 1 && data.colors.size() <= 10 && data.colors[0] is map &&
+        data.stock is int && data.stock >= 0 && data.stock <= 100000 &&
+        data.featured is bool &&
+        data.latest is bool &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isStockDecrementAction() {
+      return incoming().stock is int &&
+        incoming().stock >= 0 &&
+        incoming().stock < existing().stock &&
+        (!('updatedAt' in incoming()) || incoming().updatedAt == request.time);
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'id', 'customerId', 'customerName', 'phone', 'address',
+          'city', 'pincode', 'paymentMethod', 'items',
+          'subtotal', 'deliveryFee', 'total', 'status', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'customerId', 'customerName', 'phone', 'address',
+          'city', 'pincode', 'notes', 'paymentMethod', 'items',
+          'subtotal', 'deliveryFee', 'total', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.customerId is string && data.customerId.size() >= 1 && data.customerId.size() <= 128 &&
+        data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100 &&
+        data.phone is string && data.phone.size() >= 10 && data.phone.size() <= 20 &&
+        data.address is string && data.address.size() >= 5 && data.address.size() <= 300 &&
+        data.city is string && data.city.size() >= 2 && data.city.size() <= 80 &&
+        data.pincode is string && data.pincode.matches('^[0-9]{6}$') &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 250)) &&
+        data.paymentMethod == 'COD' &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 30 && data.items[0] is map &&
+        data.subtotal is number && data.subtotal > 0 &&
+        data.deliveryFee is number && data.deliveryFee >= 0 &&
+        data.total is number && data.total >= data.subtotal &&
+        data.status in ['Pending', 'Confirmed', 'Packed', 'Out for Delivery', 'Delivered', 'Cancelled'] &&
+        data.createdAt is timestamp &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidShopSettings(data) {
+      return data.keys().hasAll([
+          'shopName', 'tagline', 'promoBanner', 'address',
+          'openingHours', 'phone', 'whatsapp', 'mapUrl',
+          'deliveryCharge', 'freeDeliveryThreshold'
+        ]) &&
+        data.keys().hasOnly([
+          'shopName', 'tagline', 'promoBanner', 'address',
+          'openingHours', 'phone', 'whatsapp', 'mapUrl',
+          'deliveryCharge', 'freeDeliveryThreshold', 'updatedAt'
+        ]) &&
+        data.shopName is string && data.shopName.size() >= 2 && data.shopName.size() <= 120 &&
+        isBilingualMap(data.tagline, 1, 200) &&
+        isBilingualMap(data.promoBanner, 1, 250) &&
+        isBilingualMap(data.address, 1, 400) &&
+        isBilingualMap(data.openingHours, 1, 200) &&
+        data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 30 &&
+        data.whatsapp is string && data.whatsapp.size() >= 5 && data.whatsapp.size() <= 30 &&
+        data.mapUrl is string && data.mapUrl.size() >= 8 && data.mapUrl.size() <= 500 &&
+        data.deliveryCharge is number && data.deliveryCharge >= 0 && data.deliveryCharge <= 50000 &&
+        data.freeDeliveryThreshold is number && data.freeDeliveryThreshold >= 0 && data.freeDeliveryThreshold <= 500000 &&
+        (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    // Catalog Products: public storefront read, admin write + verified shopper stock decrement
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isVerifiedUser() && isValidId(productId) &&
+        isValidProduct(incoming()) && incoming().id == productId && isAdmin();
+      allow update: if isVerifiedUser() && isValidId(productId) &&
+        isValidProduct(incoming()) && incoming().id == existing().id && (
+          isAdmin() ||
+          (isStockDecrementAction() &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['stock', 'updatedAt']))
+        );
+      allow delete: if isVerifiedUser() && isValidId(productId) && isAdmin();
+    }
+
+    // Customer COD Orders: strict PII isolation, zero get/exists in list queries
+    match /orders/{orderId} {
+      allow get: if isVerifiedUser() && isValidId(orderId) && (
+        existing().customerId == request.auth.uid || isAdmin()
+      );
+      allow list: if isVerifiedUser() && (
+        resource.data.customerId == request.auth.uid || isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser() && isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().id == orderId &&
+        incoming().createdAt == request.time && (
+          (incoming().customerId == request.auth.uid && incoming().status == 'Pending') ||
+          isAdmin()
+        );
+      allow update: if isVerifiedUser() && isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().customerId == existing().customerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        (!('updatedAt' in incoming()) || incoming().updatedAt == request.time) &&
+        isAdmin();
+      allow delete: if false;
+    }
+
+    // Storefront Settings (settings/shop): public get, admin write
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId) && settingId == 'shop';
+      allow list: if false;
+      allow create, update: if isVerifiedUser() && isValidId(settingId) &&
+        settingId == 'shop' &&
+        isValidShopSettings(incoming()) &&
+        (!('updatedAt' in incoming()) || incoming().updatedAt == request.time) &&
+        isAdmin();
+      allow delete: if false;
+    }
+
+    // Admin Allowlist: readable only by self or admin, no client self-escalation
+    match /admins/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) &&
+        (request.auth.uid == userId || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+  }
+}
