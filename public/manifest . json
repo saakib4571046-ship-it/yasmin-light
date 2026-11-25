@@ -1,0 +1,15 @@
+{
+  "name": "Yasmin Lights & Home Decor",
+  "short_name": "Yasmin Lights",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0B0B",
+  "theme_color": "#0B0B0B",
+  "icons": [
+    {
+    "src": "https://flaticon.com",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
